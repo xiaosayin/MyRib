@@ -34,8 +34,9 @@ from vgg import ClsVGG
 from acsconv.converters import ACSConverter, Conv3dConverter, Conv2_5dConverter
 from load_pretrained_weights_funcs import load_mednet_pretrained_weights, load_video_pretrained_weights
 
+
 def main(save_path=cfg.save, 
-         n_epochs=cfg.n_epochs, 
+         n_epochs= 30, #cfg.n_epochs,
          seed=cfg.seed
          ):
     # set seed
@@ -47,7 +48,7 @@ def main(save_path=cfg.save,
     copy_file_backup(save_path)
     redirect_stdout(save_path)
 
-    # Datasets
+    # Datasets  crop_size down
     train_set = LIDCTwoClassDataset(crop_size=48, move=5, data_path=env.data, train=True)
     valid_set = None
     test_set = LIDCTwoClassDataset(crop_size=48, move=5, data_path=env.data, train=False)
@@ -155,6 +156,8 @@ def train(model, train_set, test_set, save, valid_set, n_epochs):
             log_dict[key] = train_meters[i]
         for i, key in enumerate(test_logs):
             log_dict[key] = test_meters[i]
+        if len(test_meters) > len(test_logs):
+            log_dict['test_auc'] = test_meters[-1]
         log_results(save, epoch, log_dict, writer=writer)
         # save model checkpoint
         if cfg.save_all:
@@ -276,7 +279,7 @@ def test_epoch(model, loader, epoch, print_freq=1, is_test=True, writer=None):
                 print(res)
     gt_classes = torch.cat(gt_classes, 0).numpy()
     pred_all_probs = torch.cat(pred_all_probs, 0).numpy()
-    auc = roc_auc_score(gt_classes, pred_all_probs[:,1])
+    auc = roc_auc_score(gt_classes, pred_all_probs,average = 'macro', multi_class = 'ovo')
     print('auc:', auc)
     return meters.avg[:-1]+[auc,]
 
