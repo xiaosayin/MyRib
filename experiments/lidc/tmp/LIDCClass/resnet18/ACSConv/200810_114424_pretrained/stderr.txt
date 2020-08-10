@@ -1,0 +1,18 @@
+20-08-10 11:44:25
+
+Traceback (most recent call last):
+  File "train_classification.py", line 285, in <module>
+    fire.Fire(main)
+  File "/home/yinwenpei/.local/lib/python3.6/site-packages/fire/core.py", line 138, in Fire
+    component_trace = _Fire(component, args, parsed_flag_args, context, name)
+  File "/home/yinwenpei/.local/lib/python3.6/site-packages/fire/core.py", line 468, in _Fire
+    target=component.__name__)
+  File "/home/yinwenpei/.local/lib/python3.6/site-packages/fire/core.py", line 672, in _CallAndUpdateTrace
+    component = fn(*varargs, **kwargs)
+  File "train_classification.py", line 53, in main
+    test_set = LIDCTwoClassDataset(crop_size=48, move=5, data_path=env.data, train=False)
+  File "/media/yinwenpei/My Passport/RibFrac/MyRibProject/experiments/lidc/lidc_dataset.py", line 86, in __init__
+    self.names = pd.merge(pd.Series(self.info.index.map(lambda x:x+'.npy'), name='index'), pd.Series(self.names, name='index'))['index'].unique()
+AttributeError: 'LIDCTwoClassDataset' object has no attribute 'info'
+
+20-08-10 11:44:25

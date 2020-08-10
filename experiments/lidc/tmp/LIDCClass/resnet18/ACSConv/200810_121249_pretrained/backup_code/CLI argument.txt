@@ -1,0 +1,5 @@
+hostName: yinwenpei-ThinkPad-X1-Carbon-6th
+account: yinwenpei
+save_path: /media/yinwenpei/My Passport/RibFrac/MyRibProject/experiments/lidc/tmp/LIDCClass/resnet18/ACSConv/200810_121249_pretrained
+CUDA_VISIBLE_DEVICES: None
+/media/yinwenpei/My Passport/RibFrac/MyRibProject/experiments/lidc/train_classification.py
