@@ -54,7 +54,7 @@ def main(save_path=cfg.save,
 
     # Define model
     model_dict = {'resnet18': ClsResNet, 'vgg16': ClsVGG, 'densenet121': ClsDenseNet}
-    model = model_dict[cfg.backbone](pretrained=cfg.pretrained, num_classes=2, backbone=cfg.backbone)
+    model = model_dict[cfg.backbone](pretrained=cfg.pretrained, num_classes=4, backbone=cfg.backbone)
 
     # convert to counterparts and load pretrained weights according to various convolution
     if cfg.conv=='ACSConv':
