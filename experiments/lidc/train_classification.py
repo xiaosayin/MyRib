@@ -36,7 +36,7 @@ from load_pretrained_weights_funcs import load_mednet_pretrained_weights, load_v
 
 
 def main(save_path=cfg.save, 
-         n_epochs= 30, #cfg.n_epochs,
+         n_epochs= 100, #cfg.n_epochs,
          seed=cfg.seed
          ):
     # set seed
