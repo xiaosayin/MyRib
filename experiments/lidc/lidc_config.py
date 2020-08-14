@@ -48,7 +48,7 @@ class LIDCSegConfig():
 
 class LIDCClassConfig(LIDCSegConfig):
     batch_size = 24
-    n_epochs = 100
+    n_epochs = 50
     drop_rate = 0.0
     seed = 0
     num_workers = 8
@@ -68,8 +68,8 @@ class LIDCClassConfig(LIDCSegConfig):
     save_all = False
     use_syncbn = True
 
-    backbone = 'resnet18' # resnet18, densenet121, vgg16
-    conv = 'ACSConv' # ACSConv, Conv2_5d, Conv3d
+    backbone = 'densenet121' # resnet18, densenet121, vgg16
+    conv = 'Conv3d' # ACSConv, Conv2_5d, Conv3d
     pretrained = True # True, False
 
     flag = '_pretrained' if pretrained else '_nopretrained'
