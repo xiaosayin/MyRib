@@ -49,9 +49,9 @@ def main(save_path=cfg.save,
     redirect_stdout(save_path)
 
     # Datasets  crop_size down
-    train_set = LIDCTwoClassDataset(crop_size=40, move=5, data_path=env.data, train=True)
+    train_set = LIDCTwoClassDataset(crop_size=32, move=5, data_path=env.data, train=True)
     valid_set = None
-    test_set = LIDCTwoClassDataset(crop_size=40, move=5, data_path=env.data, train=False)
+    test_set = LIDCTwoClassDataset(crop_size=32, move=5, data_path=env.data, train=False)
 
     # Define model
     model_dict = {'resnet18': ClsResNet, 'vgg16': ClsVGG, 'densenet121': ClsDenseNet}

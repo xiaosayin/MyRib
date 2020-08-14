@@ -47,7 +47,7 @@ class LIDCSegConfig():
     save = os.path.join(sys.path[0], './tmp', 'LIDC', backbone, conv, time.strftime("%y%m%d_%H%M%S")+flag)
 
 class LIDCClassConfig(LIDCSegConfig):
-    batch_size = 24
+    batch_size = 16
     n_epochs = 50
     drop_rate = 0.1
     seed = 0
