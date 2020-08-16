@@ -4,6 +4,7 @@ import _init_paths
 
 import fire
 import time
+import sys
 import pandas as pd
 import os
 import numpy as np
@@ -17,7 +18,7 @@ from tqdm import tqdm
 from collections import OrderedDict
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score,confusion_matrix
 
 from mylib.sync_batchnorm import DataParallelWithCallback
 from lidc_dataset import LIDCTwoClassDataset
@@ -47,6 +48,10 @@ def main(save_path=cfg.save,
     os.makedirs(save_path)
     copy_file_backup(save_path)
     redirect_stdout(save_path)
+
+    confusion_path = os.path.join(sys.path[0], 'tmp', 'confusion_matrix')
+    os.makedirs(confusion_path)  # 保存confusion matrix
+
 
     # Datasets  crop_size down
     train_set = LIDCTwoClassDataset(crop_size=32, move=5, data_path=env.data, train=True)
@@ -164,7 +169,7 @@ def train(model, train_set, test_set, save, valid_set, n_epochs):
             torch.save(model.state_dict(), os.path.join(save, 'epoch_{}'.format(epoch), 'model.dat'))
 
         if log_dict['test_auc'] > best_auc:
-            torch.save(model.state_dict(), os.path.join(save, 'model.dat'))
+            torch.save(model.state_dict(), os.path.join(save,'epoch_{}'.format(epoch), 'model.dat'))
             best_auc = log_dict['test_auc']
             print('New best auc: %.4f' % log_dict['test_auc'])
         else:
@@ -239,6 +244,7 @@ def test_epoch(model, loader, epoch, print_freq=1, is_test=True, writer=None):
     model.eval()
     gt_classes = []
     pred_all_probs = []
+    pred_all_class = []
     end = time.time()
     with torch.no_grad():
         for batch_idx, (x, y) in enumerate(loader):
@@ -251,6 +257,7 @@ def test_epoch(model, loader, epoch, print_freq=1, is_test=True, writer=None):
             pred_class = pred_logits.max(-1)[1]
             pred_probs = pred_logits.softmax(-1)
             pred_all_probs.append(pred_probs.cpu())
+            pred_all_class.append(pred_class.cpu())
             gt_classes.append(y.cpu())
             batch_size = y.size(0)
             num_classes = pred_logits.size(1)
@@ -277,8 +284,13 @@ def test_epoch(model, loader, epoch, print_freq=1, is_test=True, writer=None):
                     'ACC %.4f (%.4f)' % (meters.val[1], meters.avg[1]),
                 ])
                 print(res)
-    gt_classes = torch.cat(gt_classes, 0).numpy()
-    pred_all_probs = torch.cat(pred_all_probs, 0).numpy()
+    gt_classes = torch.cat(gt_classes, 0).numpy() # ground truth
+    pred_all_class = torch.cat(pred_all_class,0).numpy()   # 预测结果
+    pred_all_probs = torch.cat(pred_all_probs, 0).numpy()  # 多分类的score
+
+    np.save(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'epoch_{}_'.format(epoch) + 'gt_class.npy'),gt_classes)
+    np.save(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'epoch_{}_'.format(epoch) + 'pred_all_class.npy'),pred_all_class)
+
     auc = roc_auc_score(gt_classes, pred_all_probs,average = 'macro', multi_class = 'ovo')
     print('auc:', auc)
     return meters.avg[:-1]+[auc,]
