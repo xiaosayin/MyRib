@@ -7,6 +7,7 @@ import time
 import sys
 import pandas as pd
 import os
+import shutil
 import numpy as np
 import torch
 import torch.nn as nn
@@ -50,13 +51,15 @@ def main(save_path=cfg.save,
     redirect_stdout(save_path)
 
     confusion_path = os.path.join(sys.path[0], 'tmp', 'confusion_matrix')
+    if os.path.exists(confusion_path):
+        shutil.rmtree(confusion_path)
     os.makedirs(confusion_path)  # 保存confusion matrix
 
 
     # Datasets  crop_size down
-    train_set = LIDCTwoClassDataset(crop_size=32, move=5, data_path=env.data, train=True)
+    train_set = LIDCTwoClassDataset(crop_size=50, move=5, data_path=env.data, train=True)
     valid_set = None
-    test_set = LIDCTwoClassDataset(crop_size=32, move=5, data_path=env.data, train=False)
+    test_set = LIDCTwoClassDataset(crop_size=50, move=5, data_path=env.data, train=False)
 
     # Define model
     model_dict = {'resnet18': ClsResNet, 'vgg16': ClsVGG, 'densenet121': ClsDenseNet}
@@ -166,7 +169,7 @@ def train(model, train_set, test_set, save, valid_set, n_epochs):
         log_results(save, epoch, log_dict, writer=writer)
         # save model checkpoint
         if cfg.save_all:
-            torch.save(model.state_dict(), os.path.join(save, 'epoch_{}'.format(epoch), 'model.dat'))
+            torch.save(model.state_dict(), os.path.join(save, 'epoch_{}'.format(epoch)+'model.dat'))
 
         if log_dict['test_auc'] > best_auc:
             torch.save(model.state_dict(), os.path.join(save,'epoch_{}'.format(epoch), 'model.dat'))
@@ -189,6 +192,8 @@ def train_epoch(model, loader, optimizer, epoch, n_epochs, print_freq=1, writer=
     model.train()
     global iteration
     end = time.time()
+    pred_all_class_train = []
+    gt_classes_train = []
     for batch_idx, (x, y) in enumerate(loader):
         # Create vaiables
         x = to_var(x)
@@ -201,6 +206,8 @@ def train_epoch(model, loader, optimizer, epoch, n_epochs, print_freq=1, writer=
         optimizer.step()
         # calculate metrics
         pred_class = pred_logits.max(-1)[1]
+        gt_classes_train.append(y.cpu())
+        pred_all_class_train.append(pred_class.cpu())
         batch_size = y.size(0)
         num_classes = pred_logits.size(1)
         same = pred_class==y
@@ -232,6 +239,10 @@ def train_epoch(model, loader, optimizer, epoch, n_epochs, print_freq=1, writer=
                 'ACC %.4f (%.4f)' % (meters.val[1], meters.avg[1]),
             ])
             print(res)
+    gt_classes_train = torch.cat(gt_classes_train, 0).numpy()  # ground truth
+    pred_all_class_train = torch.cat(pred_all_class_train, 0).numpy()  # 预测结果
+    epoch_dataframe_train = pd.DataFrame([gt_classes_train, pred_all_class_train],index=['gt_classes', 'pred_all_class']).T  # 将gt_classes和pred_all_class
+    epoch_dataframe_train.to_csv(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'train_'+'epoch_{}_'.format(epoch) + 'confusion_matrix.csv'))
     return meters.avg[:-1]
 
 
@@ -287,13 +298,11 @@ def test_epoch(model, loader, epoch, print_freq=1, is_test=True, writer=None):
     gt_classes = torch.cat(gt_classes, 0).numpy() # ground truth
     pred_all_class = torch.cat(pred_all_class,0).numpy()   # 预测结果
     pred_all_probs = torch.cat(pred_all_probs, 0).numpy()  # 多分类的score
-
-    np.save(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'epoch_{}_'.format(epoch) + 'gt_class.npy'),gt_classes)
-    np.save(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'epoch_{}_'.format(epoch) + 'pred_all_class.npy'),pred_all_class)
-
+    epoch_dataframe = pd.DataFrame([gt_classes,pred_all_class],index = ['gt_classes','pred_all_class']).T  # 将gt_classes和pred_all_class
+    epoch_dataframe.to_csv(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'epoch_{}_'.format(epoch) + 'confusion_matrix.csv'))
     auc = roc_auc_score(gt_classes, pred_all_probs,average = 'macro', multi_class = 'ovo')
     print('auc:', auc)
-    return meters.avg[:-1]+[auc,]
+    return meters.avg[:-1]+[auc,],epoch_dataframe
 
 
 if __name__ == '__main__':

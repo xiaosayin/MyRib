@@ -47,7 +47,7 @@ class LIDCSegConfig():
     save = os.path.join(sys.path[0], './tmp', 'LIDC', backbone, conv, time.strftime("%y%m%d_%H%M%S")+flag)
 
 class LIDCClassConfig(LIDCSegConfig):
-    batch_size = 16
+    batch_size = 24
     n_epochs = 50
     drop_rate = 0
     seed = 0
@@ -68,8 +68,8 @@ class LIDCClassConfig(LIDCSegConfig):
     save_all = False
     use_syncbn = True
 
-    backbone = 'densenet121' # resnet18, densenet121, vgg16
-    conv = 'Conv3d' # ACSConv, Conv2_5d, Conv3d
+    backbone = 'resnet18' # resnet18, densenet121, vgg16
+    conv = 'ACSConv' # ACSConv, Conv2_5d, Conv3d
     pretrained = True # True, False
 
     flag = '_pretrained' if pretrained else '_nopretrained'
