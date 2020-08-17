@@ -108,7 +108,7 @@ class ClassTransform:
 
     def __call__(self, voxel):
         shape = voxel.shape
-        voxel = voxel/255. - 1
+        # voxel = voxel/255. - 1
         if self.train:
             if self.move is not None:
                 center = random_center(shape, self.move)
