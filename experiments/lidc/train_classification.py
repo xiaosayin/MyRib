@@ -57,9 +57,9 @@ def main(save_path=cfg.save,
 
 
     # Datasets  crop_size down
-    train_set = LIDCTwoClassDataset(crop_size=50, move=5, data_path=env.data, train=True)
+    train_set = LIDCTwoClassDataset(crop_size=2, move=5, data_path=env.data, train=True)
     valid_set = None
-    test_set = LIDCTwoClassDataset(crop_size=50, move=5, data_path=env.data, train=False)
+    test_set = LIDCTwoClassDataset(crop_size=2, move=5, data_path=env.data, train=False)
 
     # Define model
     model_dict = {'resnet18': ClsResNet, 'vgg16': ClsVGG, 'densenet121': ClsDenseNet}
@@ -302,7 +302,7 @@ def test_epoch(model, loader, epoch, print_freq=1, is_test=True, writer=None):
     epoch_dataframe.to_csv(os.path.join(sys.path[0], 'tmp', 'confusion_matrix', 'epoch_{}_'.format(epoch) + 'confusion_matrix.csv'))
     auc = roc_auc_score(gt_classes, pred_all_probs,average = 'macro', multi_class = 'ovo')
     print('auc:', auc)
-    return meters.avg[:-1]+[auc,],epoch_dataframe
+    return meters.avg[:-1]+[auc,]
 
 
 if __name__ == '__main__':
